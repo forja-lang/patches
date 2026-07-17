@@ -40,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- `x11_clipboard` was bumped to `0.7.0` droping `quick-xml` from the deps tree
+- `x11_clipboard` was bumped to `0.8.2` droping `quick-xml` from the deps tree
 
 
 ## 0.8.1 
@@ -65,7 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated `smithay-clipboard` to 0.6.0
 
-## 0.7.0
+## 0.8.2
 
 ### Packaging
 
