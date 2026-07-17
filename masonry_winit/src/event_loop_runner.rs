@@ -13,8 +13,11 @@ use copypasta::{ClipboardContext, ClipboardProvider};
 use masonry_core::app::{RenderRoot, RenderRootOptions, RenderRootSignal, WindowSizePolicy};
 use masonry_core::core::keyboard::{Key, KeyState};
 use masonry_core::core::{
-    DefaultProperties, ErasedAction, NewWidget, TextEvent, Widget, WidgetId, WindowEvent,
+    DefaultProperties, ErasedAction, NewWidget, PointerButton, PointerButtonEvent, PointerEvent,
+    PointerId, PointerInfo, PointerState, PointerType, PointerUpdate, TextEvent, Widget, WidgetId,
+    WindowEvent,
 };
+use masonry_core::ui_events::pointer::PointerButtons;
 use masonry_core::kurbo::Affine;
 use masonry_core::peniko::Color;
 use masonry_core::util::Instant;
@@ -25,7 +28,7 @@ use ui_events_winit::{WindowEventReducer, WindowEventTranslation};
 use winit::application::ApplicationHandler;
 use winit::dpi::PhysicalSize;
 use winit::error::EventLoopError;
-use winit::event::{DeviceEvent as WinitDeviceEvent, DeviceId, WindowEvent as WinitWindowEvent};
+use winit::event::{DeviceEvent as WinitDeviceEvent, DeviceId, TouchPhase, WindowEvent as WinitWindowEvent};
 use winit::event_loop::ActiveEventLoop;
 use winit::window::{Window as WindowHandle, WindowAttributes, WindowId as HandleId};
 
@@ -715,6 +718,52 @@ impl MasonryState<'_> {
                 window
                     .render_root
                     .handle_text_event(TextEvent::WindowFocusChange(new_focus));
+            }
+            WinitWindowEvent::Touch(touch) => {
+                let physical = touch.location;
+                let pointer_id = PointerId::new(touch.id);
+
+                let pointer_info = PointerInfo {
+                    pointer_id,
+                    persistent_device_id: None,
+                    pointer_type: PointerType::Touch,
+                };
+
+                let pointer_event = match touch.phase {
+                    TouchPhase::Started => PointerEvent::Down(PointerButtonEvent {
+                        button: Some(PointerButton::Primary),
+                        pointer: pointer_info,
+                        state: PointerState {
+                            position: physical,
+                            buttons: {
+                                let mut b = PointerButtons::new();
+                                b.insert(PointerButton::Primary);
+                                b
+                            },
+                            ..Default::default()
+                        },
+                    }),
+                    TouchPhase::Moved => PointerEvent::Move(PointerUpdate {
+                        pointer: pointer_info,
+                        current: PointerState {
+                            position: physical,
+                            ..Default::default()
+                        },
+                        coalesced: vec![],
+                        predicted: vec![],
+                    }),
+                    TouchPhase::Ended => PointerEvent::Up(PointerButtonEvent {
+                        button: Some(PointerButton::Primary),
+                        pointer: pointer_info,
+                        state: PointerState {
+                            position: physical,
+                            ..Default::default()
+                        },
+                    }),
+                    TouchPhase::Cancelled => PointerEvent::Cancel(pointer_info),
+                };
+
+                window.render_root.handle_pointer_event(pointer_event);
             }
             _ => (),
         }
