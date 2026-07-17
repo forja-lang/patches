@@ -70,7 +70,6 @@ default-features = false
 [target.'cfg(target_os = "android")'.dependencies.accesskit_winit]
 version = "0.29.2"
 features = [
-    "accesskit_android",
     "tokio",
     "rwh_06",
 ]
